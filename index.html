@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinDash - Secure budget tracking system </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: { colors: { sidebar: '#1e293b', activeMenu: '#334155', appBg: '#f8fafc', logoutRed: '#ef4444' }, fontFamily: { sans: ['Inter', 'sans-serif'] } }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-appBg text-gray-800 font-sans hidden" id="body-container">
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
+
+    <div id="auth-view" class="min-h-screen flex items-center justify-center bg-gray-100 hidden">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-200">
+            <div class="text-center mb-8">
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <div class="bg-blue-600 p-2 rounded-lg text-white"><i data-lucide="layers"></i></div>
+                    <h1 class="text-2xl font-bold text-gray-900">FinDash</h1>
+                </div>
+                <h2 id="auth-title" class="text-xl font-semibold text-gray-800">Welcome Back</h2>
+                <p id="auth-subtitle" class="text-gray-500 text-sm">Login to manage your finances</p>
+            </div>
+            
+            <form id="auth-form" class="space-y-4">
+                <div id="name-field" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="reg-name" class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="email" required class="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="password" required class="w-full px-4 py-2 border rounded-lg pr-10 outline-none focus:ring-2 focus:ring-blue-500">
+                    <button type="button" id="toggle-password" class="absolute right-3 top-8 text-gray-500"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                </div>
+                <button type="submit" id="btn-auth-submit" class="w-full bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 transition">Login</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <button id="toggle-auth-mode" class="text-sm text-blue-600 hover:underline">New here? Create an account</button>
+            </div>
+
+            <div class="mt-6 border-t border-gray-200 pt-6">
+                <button id="btn-google-login" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-medium py-2 rounded-lg hover:bg-gray-50">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5"> Continue with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-view" class="flex h-screen overflow-hidden hidden">
+        <aside class="w-64 bg-sidebar text-white flex flex-col h-full shrink-0">
+            <div class="p-6 flex items-center gap-3"><div class="bg-blue-500 p-1.5 rounded text-white"><i data-lucide="layers" class="w-6 h-6"></i></div><div><h1 class="font-bold text-lg leading-tight">FinDash</h1></div></div>
+            <p class="px-6 text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Menu</p>
+            <nav class="flex-1 space-y-1 px-3">
+                <a href="#dashboard" class="nav-link active flex items-center gap-3 px-3 py-2.5 rounded-lg bg-activeMenu text-white border-l-4 border-blue-400" data-view="dashboard-view"><i data-lucide="layout-grid" class="w-5 h-5"></i> Dashboard</a>
+                <a href="#income" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-activeMenu" data-view="income-view"><i data-lucide="trending-up" class="w-5 h-5"></i> Income</a>
+                <a href="#expenses" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-activeMenu" data-view="expenses-view"><i data-lucide="trending-down" class="w-5 h-5"></i> Expenses</a>
+                <a href="#budget" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-activeMenu" data-view="budget-view"><i data-lucide="pie-chart" class="w-5 h-5"></i> Budget</a>
+                <a href="#reports" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-300 hover:bg-activeMenu" data-view="reports-view"><i data-lucide="bar-chart-2" class="w-5 h-5"></i> Reports</a>
+                <a href="#notifications" class="nav-link flex items-center justify-between px-3 py-2.5 rounded-lg text-gray-300 hover:bg-activeMenu" data-view="notifications-view">
+                    <div class="flex items-center gap-3"><i data-lucide="bell" class="w-5 h-5"></i> Notifications</div><span class="notif-count-badge bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full overflow-hidden bg-gray-50">
+            <header class="h-20 border-b border-gray-200 flex items-center justify-between px-8 bg-white shrink-0">
+                <div><h2 id="page-title" class="text-xl font-bold text-gray-800">Dashboard</h2><p class="text-sm text-gray-500" id="greeting-msg">Good Morning, User!</p></div>
+                <div class="flex items-center gap-6">
+                    <button class="relative" onclick="switchView('notifications-view', 'Notifications')"><i data-lucide="bell" class="w-6 h-6 text-gray-600 hover:text-blue-600"></i><span class="notif-count-badge absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span></button>
+                    <div class="flex items-center gap-3 border-l pl-6">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold" id="user-avatar">U</div>
+                        <div><p class="text-sm font-semibold text-gray-800" id="user-fullname">User</p><p class="text-xs text-gray-500" id="user-email">user@email.com</p></div>
+                    </div>
+                    <button id="btn-logout" class="flex items-center gap-2 bg-logoutRed hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium"><i data-lucide="log-out" class="w-4 h-4"></i> Logout</button>
+                </div>
+            </header>
+
+            <div id="views-container" class="flex-1 overflow-y-auto p-8">
+                
+                <div id="dashboard-view" class="view-section active-view space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white p-5 rounded-xl border shadow-sm flex items-center gap-4"><div class="bg-green-100 p-3 rounded-lg text-green-600"><i data-lucide="arrow-up-right"></i></div><div><p class="text-sm text-gray-500">Total Income</p><h3 class="text-xl font-bold" id="dash-income">₹0</h3></div></div>
+                        <div class="bg-white p-5 rounded-xl border shadow-sm flex items-center gap-4"><div class="bg-red-100 p-3 rounded-lg text-red-600"><i data-lucide="arrow-down-right"></i></div><div><p class="text-sm text-gray-500">Total Expenses</p><h3 class="text-xl font-bold" id="dash-expense">₹0</h3></div></div>
+                        <div class="bg-white p-5 rounded-xl border shadow-sm flex items-center gap-4"><div class="bg-blue-100 p-3 rounded-lg text-blue-600"><i data-lucide="wallet"></i></div><div><p class="text-sm text-gray-500">Remaining Balance</p><h3 class="text-xl font-bold" id="dash-balance">₹0</h3></div></div>
+                        <div class="bg-white p-5 rounded-xl border shadow-sm flex items-center gap-4"><div class="bg-purple-100 p-3 rounded-lg text-purple-600"><i data-lucide="piggy-bank"></i></div><div><p class="text-sm text-gray-500">Savings Rate</p><h3 class="text-xl font-bold" id="dash-savings">0%</h3></div></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-4">Cash Flow Overview</h3><canvas id="dashFlowChart" height="100"></canvas></div>
+                        <div class="space-y-6">
+                            <div class="bg-blue-600 p-6 rounded-xl border shadow-sm text-white">
+                                <h3 class="font-bold mb-2">Pro Tip</h3>
+                                <p class="text-sm opacity-90">Always keep at least 20% of your income in savings to build a strong emergency fund.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-4">Recent Transactions</h3><div id="dash-recent-list" class="space-y-3"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="income-view" class="view-section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border shadow-sm h-fit">
+                            <h3 class="font-bold text-gray-800 mb-4" id="inc-form-title">Add Income</h3>
+                            <form id="form-income" class="space-y-4">
+                                <input type="hidden" id="inc-id">
+                                <div><label class="block text-sm mb-1">Amount (₹)</label><input type="number" id="inc-amount" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <div><label class="block text-sm mb-1">Source/Description</label><input type="text" id="inc-source" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <div><label class="block text-sm mb-1">Category</label><select id="inc-category" class="w-full px-4 py-2 border rounded-lg outline-none"><option>Salary</option><option>Business</option><option>Investment</option><option>Other</option></select></div>
+                                <div><label class="block text-sm mb-1">Date</label><input type="date" id="inc-date" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <button type="submit" id="btn-inc-submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">Save Income</button>
+                                <button type="button" id="btn-inc-cancel" class="w-full hidden bg-gray-200 text-gray-700 py-2 rounded-lg mt-2">Cancel Edit</button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white p-6 rounded-xl border shadow-sm"><p class="text-sm text-gray-500">Total Income (This Month)</p><h3 class="text-2xl font-bold text-green-600" id="inc-total">₹0</h3></div>
+                                <div class="bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-3 text-sm">Income Breakdown</h3><div id="inc-breakdown" class="space-y-2 text-sm"></div></div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-4">Income History</h3><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="py-2 px-3">Date</th><th class="py-2 px-3">Source</th><th class="py-2 px-3">Category</th><th class="py-2 px-3">Amount</th><th class="py-2 px-3 text-right">Actions</th></tr></thead><tbody id="inc-table-body" class="divide-y"></tbody></table></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="expenses-view" class="view-section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border shadow-sm h-fit">
+                            <h3 class="font-bold text-gray-800 mb-4" id="exp-form-title">Add Expense</h3>
+                            <form id="form-expense" class="space-y-4">
+                                <input type="hidden" id="exp-id">
+                                <div><label class="block text-sm mb-1">Amount (₹)</label><input type="number" id="exp-amount" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <div><label class="block text-sm mb-1">Category</label><select id="exp-category" class="w-full px-4 py-2 border rounded-lg outline-none"><option>Food & Dining</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Utilities</option><option>Entertainment</option><option>Other</option></select></div>
+                                <div><label class="block text-sm mb-1">Description</label><input type="text" id="exp-desc" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <div><label class="block text-sm mb-1">Date</label><input type="date" id="exp-date" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <button type="submit" id="btn-exp-submit" class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600">Save Expense</button>
+                                <button type="button" id="btn-exp-cancel" class="w-full hidden bg-gray-200 text-gray-700 py-2 rounded-lg mt-2">Cancel Edit</button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2 space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-white p-6 rounded-xl border shadow-sm"><p class="text-sm text-gray-500">Total Expenses (This Month)</p><h3 class="text-2xl font-bold text-red-600" id="exp-total">₹0</h3></div>
+                                <div class="bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-3 text-sm">Category Breakdown</h3><div id="exp-breakdown" class="space-y-2 text-sm"></div></div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-4">Expense List</h3><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="py-2 px-3">Date</th><th class="py-2 px-3">Description</th><th class="py-2 px-3">Category</th><th class="py-2 px-3">Amount</th><th class="py-2 px-3 text-right">Actions</th></tr></thead><tbody id="exp-table-body" class="divide-y"></tbody></table></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="budget-view" class="view-section hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-6 rounded-xl border shadow-sm h-fit">
+                            <h3 class="font-bold mb-4">Set Monthly Budget</h3>
+                            <form id="form-budget" class="space-y-4">
+                                <div><label class="block text-sm mb-1">Month</label><input type="month" id="bud-month" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <div><label class="block text-sm mb-1">Category</label><select id="bud-category" class="w-full px-4 py-2 border rounded-lg outline-none"><option>Food & Dining</option><option>Housing</option><option>Transport</option><option>Shopping</option><option>Utilities</option><option>Entertainment</option><option>Other</option></select></div>
+                                <div><label class="block text-sm mb-1">Budget Limit (₹)</label><input type="number" id="bud-amount" required class="w-full px-4 py-2 border rounded-lg outline-none"></div>
+                                <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">Set Budget</button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2 bg-white p-6 rounded-xl border shadow-sm">
+                            <h3 class="font-bold mb-6" id="budget-list-title">Category-Wise Budgets (Current Month)</h3>
+                            <div id="budget-list" class="space-y-6"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="reports-view" class="view-section hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl border shadow-sm"><p class="text-xs text-gray-500">Total Income</p><h3 class="text-lg font-bold text-green-600" id="rep-inc">₹0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border shadow-sm"><p class="text-xs text-gray-500">Total Expenses</p><h3 class="text-lg font-bold text-red-600" id="rep-exp">₹0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border shadow-sm"><p class="text-xs text-gray-500">Net Savings</p><h3 class="text-lg font-bold text-blue-600" id="rep-net">₹0</h3></div>
+                        <div class="bg-white p-4 rounded-xl border shadow-sm"><p class="text-xs text-gray-500">Avg Daily Spend</p><h3 class="text-lg font-bold text-purple-600" id="rep-daily">₹0</h3></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-4">Income vs Expenses (6 Months)</h3><canvas id="repBarChart" height="150"></canvas></div>
+                        <div class="bg-white p-6 rounded-xl border shadow-sm flex flex-col items-center"><h3 class="font-bold mb-4 w-full text-left">Expense Breakdown</h3><div class="w-3/4"><canvas id="repPieChart"></canvas></div></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border shadow-sm"><h3 class="font-bold mb-4">Monthly Savings Trend (6 Months)</h3><div id="rep-trend-list" class="space-y-4"></div></div>
+                </div>
+
+                <div id="notifications-view" class="view-section hidden">
+                    <div class="bg-white p-6 rounded-xl border shadow-sm">
+                        <div class="flex justify-between items-center mb-6"><h3 class="font-bold">Recent Alerts</h3><button id="btn-clear-notifs" class="text-sm text-red-500 hover:underline">Clear All</button></div>
+                        <div id="notifications-list" class="space-y-3"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
